@@ -30,7 +30,7 @@ interface TrackingRequest {
     deniedReason?: string;
 }
 
-export default function TrackPage() {
+export default function TrackPageContent() {
     const { user, isLoading, token } = useAuth();
     const router = useRouter();
     const searchParams = useSearchParams();
