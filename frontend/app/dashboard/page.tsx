@@ -202,7 +202,7 @@ export default function Dashboard() {
                     >
                         📋 Tracking Manager
                     </Link>
-                    <button className="p-4 bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors duration-300 cursor-pointer">
+                    <button className="p-4 bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors duration-300 cursor-pointer   ">
                         ⚙️ Settings
                     </button>
                 </div>
