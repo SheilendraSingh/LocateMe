@@ -2,8 +2,8 @@
 
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useCallback } from "react";
-import toast, { Toaster } from "react-hot-toast";
+import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import Link from "next/link";
 
 interface TrackingStats {
@@ -23,22 +23,7 @@ export default function Dashboard() {
         total: 0,
     });
 
-    const fetchTrackingStats = useCallback(async () => {
-        try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/auth/tracking-status`, {
-                method: "GET",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-            if (res.ok) {
-                const data = await res.json();
-                setTrackingStats(data.stats);
-            }
-        } catch (error) {
-            console.error("Failed to fetch tracking stats:", error);
-        }
-    }, [token]);
+
 
     useEffect(() => {
         if (!isLoading && !user) {
@@ -48,13 +33,34 @@ export default function Dashboard() {
     }, [user, isLoading, router]);
 
     useEffect(() => {
-        if (user && token) {
-            fetchTrackingStats();
-            // Set up real-time updates every 30 seconds
-            const interval = setInterval(fetchTrackingStats, 30000);
-            return () => clearInterval(interval);
-        }
-    }, [user, token, fetchTrackingStats]);
+        if (!user || !token) return;
+
+        const loadStats = async () => {
+            try {
+                const res = await fetch(
+                    `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/auth/tracking-status`,
+                    {
+                        method: "GET",
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    }
+                );
+
+                if (res.ok) {
+                    const data = await res.json();
+                    setTrackingStats(data.stats);
+                }
+            } catch (error) {
+                console.error("Failed to fetch tracking stats:", error);
+            }
+        };
+
+        loadStats();
+        const interval = setInterval(loadStats, 30000);
+
+        return () => clearInterval(interval);
+    }, [user, token]);
 
     if (isLoading) {
         return <div className="flex items-center justify-center h-screen text-foreground">Loading...</div>;
@@ -81,30 +87,18 @@ export default function Dashboard() {
 
             const { latitude, longitude } = position.coords;
 
-            // Reverse geocode to get address
-            const address = await reverseGeocode(latitude, longitude);
-
             // Copy location to clipboard
-            const locationText = `My current location: ${address} (Lat: ${latitude.toFixed(6)}, Lng: ${longitude.toFixed(6)})`;
-            await navigator.clipboard.writeText(locationText);
+            const googleMapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
+            await navigator.clipboard.writeText(googleMapsLink);
 
-            toast.success("Location copied to clipboard!");
+
+            toast.success("Google Maps link copied to clipboard!");
         } catch (error) {
             console.error("Error getting location:", error);
             toast.error("Failed to get your location");
         }
     };
 
-    const reverseGeocode = async (lat: number, lon: number): Promise<string> => {
-        try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`);
-            const data = await res.json();
-            return data && data.display_name ? data.display_name : `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
-        } catch (error) {
-            console.error("Reverse geocoding failed:", error);
-            return `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
-        }
-    };
 
     const viewTrackingHistory = () => {
         // Navigate to track page with tracking manager open
@@ -113,7 +107,7 @@ export default function Dashboard() {
 
     return (
         <div className="min-h-screen bg-background text-foreground">
-            <Toaster />
+
             {/* Hero Section */}
             <section className="py-12">
                 <h1 className="text-4xl font-bold mb-4">Welcome, {user.name}!</h1>
@@ -186,13 +180,13 @@ export default function Dashboard() {
                     </Link>
                     <button
                         onClick={shareMyLocation}
-                        className="p-4 bg-green-600 hover:bg-green-700 rounded-lg transition-colors duration-300"
+                        className="p-4 bg-green-600 hover:bg-green-700 rounded-lg transition-colors duration-300 cursor-pointer"
                     >
                         📤 Share My Location
                     </button>
                     <button
                         onClick={viewTrackingHistory}
-                        className="p-4 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors duration-300"
+                        className="p-4 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors duration-300 cursor-pointer"
                     >
                         📊 View Tracking History
                     </button>
@@ -208,7 +202,7 @@ export default function Dashboard() {
                     >
                         📋 Tracking Manager
                     </Link>
-                    <button className="p-4 bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors duration-300">
+                    <button className="p-4 bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors duration-300 cursor-pointer">
                         ⚙️ Settings
                     </button>
                 </div>

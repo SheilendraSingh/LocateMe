@@ -50,48 +50,70 @@ export default function TrackPage() {
         active: TrackingRequest[];
         denied: TrackingRequest[];
     }>({ pending: [], active: [], denied: [] });
-    const [showTrackingManager, setShowTrackingManager] = useState(false);
 
-    const fetchTrackingStatus = useCallback(async () => {
-        try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/auth/tracking-status`, {
-                method: "GET",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-            if (res.ok) {
-                const data = await res.json();
-                setTrackingStats(data.stats);
-                setTrackingDetails(data.details);
-            }
-        } catch (error) {
-            console.error("Failed to fetch tracking status:", error);
-        }
-    }, [token]);
+
+
 
     // Get active tab from URL params
-    const getActiveTab = (): 'main' | 'pending' | 'active' | 'denied' | 'all' | 'permissions' | 'history' => {
-        const tab = searchParams.get('tab');
+    type ActiveTab =
+        | "main"
+        | "pending"
+        | "active"
+        | "denied"
+        | "all"
+        | "permissions"
+        | "history";
+
+    const getActiveTab = (): ActiveTab => {
+        const tab = searchParams.get("tab");
+
         switch (tab) {
-            case 'pending':
-                return 'pending';
-            case 'active':
-                return 'active';
-            case 'denied':
-                return 'denied';
-            case 'all':
-                return 'all';
-            case 'permissions':
-                return 'permissions';
-            case 'history':
-                return 'history';
+            case "pending":
+                return "pending";
+            case "active":
+                return "active";
+            case "denied":
+                return "denied";
+            case "all":
+                return "all";
+            case "permissions":
+                return "permissions";
+            case "history":
+                return "history";
             default:
-                return 'main';
+                return "main";
         }
     };
 
-    const activeTab: 'main' | 'pending' | 'active' | 'denied' | 'all' | 'permissions' | 'history' = getActiveTab();
+    const activeTab: ActiveTab = getActiveTab();
+
+    useEffect(() => {
+        if (activeTab === "main" || !token) return;
+
+        const loadTrackingStatus = async () => {
+            try {
+                const res = await fetch(
+                    `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/auth/tracking-status`,
+                    {
+                        method: "GET",
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    }
+                );
+
+                if (res.ok) {
+                    const data = await res.json();
+                    setTrackingStats(data.stats);
+                    setTrackingDetails(data.details);
+                }
+            } catch (error) {
+                console.error("Failed to fetch tracking status:", error);
+            }
+        };
+
+        loadTrackingStatus();
+    }, [activeTab, token]);
 
     useEffect(() => {
         if (!isLoading && !user) {
@@ -241,7 +263,7 @@ export default function TrackPage() {
     };
 
     const stopRealTimeTracking = () => {
-        if (watchId !== null) {
+        if (watchId !== null && navigator.geolocation) {
             navigator.geolocation.clearWatch(watchId);
             setWatchId(null);
         }
@@ -268,7 +290,7 @@ export default function TrackPage() {
 
     const denyTracking = async () => {
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/auth/deny-tracking`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/auth/deny`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -281,7 +303,7 @@ export default function TrackPage() {
                 setIsOtpSent(false);
                 setOtp("");
                 toast.success("Tracking request denied");
-                fetchTrackingStatus();
+
             } else {
                 const error = await res.json();
                 toast.error(error.message);
@@ -303,7 +325,7 @@ export default function TrackPage() {
             });
             if (res.ok) {
                 toast.success("Tracking closed successfully");
-                fetchTrackingStatus();
+
             } else {
                 const error = await res.json();
                 toast.error(error.message);
@@ -344,10 +366,8 @@ export default function TrackPage() {
                         <p className="text-lg opacity-75">Request location tracking with user consent via OTP.</p>
                     </div>
                     <button
-                        onClick={() => {
-                            setShowTrackingManager(!showTrackingManager);
-                            if (!showTrackingManager) fetchTrackingStatus();
-                        }}
+                        type="button"
+                        onClick={() => router.push("/track?tab=all")}
                         className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 flex items-center gap-2"
                     >
                         📊 Manage Tracking
@@ -366,13 +386,12 @@ export default function TrackPage() {
                     <div className="p-8 bg-gray-800 rounded-lg shadow-md">
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-2xl font-bold">
-                                {activeTab === 'pending' && 'Pending Requests'}
-                                {activeTab === 'active' && 'Active Trackings'}
-                                {activeTab === 'denied' && 'Denied Requests'}
-                                {activeTab === 'all' && 'All Tracking Requests'}
-                                {activeTab === 'permissions' && 'Manage Permissions'}
-                                {activeTab === 'history' && 'Tracking History'}
-                                {activeTab === 'main' && 'Tracking Manager'}
+                                {activeTab === 'pending' ? 'Pending Requests' : null}
+                                {activeTab === 'active' ? 'Active Trackings' : null}
+                                {activeTab === 'denied' ? 'Denied Requests' : null}
+                                {activeTab === 'all' ? 'All Tracking Requests' : null}
+                                {activeTab === 'permissions' ? 'Manage Permissions' : null}
+                                {activeTab === 'history' ? 'Tracking History' : null}
                             </h2>
                             <button
                                 onClick={() => router.push('/track')}
@@ -436,7 +455,7 @@ export default function TrackPage() {
                         )}
 
                         {/* Active Trackings */}
-                        {(activeTab === 'main' || activeTab === 'active') && trackingDetails.active.length > 0 && (
+                        {(activeTab === 'active') && trackingDetails.active.length > 0 && (
                             <div className="mb-8">
                                 <h3 className="text-xl font-semibold mb-4 text-green-400">Active Trackings</h3>
                                 <div className="space-y-3">
@@ -466,7 +485,7 @@ export default function TrackPage() {
                         )}
 
                         {/* Pending Requests */}
-                        {(activeTab === 'main' || activeTab === 'pending') && trackingDetails.pending.length > 0 && (
+                        {(activeTab === 'pending') && trackingDetails.pending.length > 0 && (
                             <div className="mb-8">
                                 <h3 className="text-xl font-semibold mb-4 text-yellow-400">Pending Requests</h3>
                                 <div className="space-y-3">
@@ -494,7 +513,7 @@ export default function TrackPage() {
                         )}
 
                         {/* Denied Requests */}
-                        {(activeTab === 'main' || activeTab === 'denied') && trackingDetails.denied.length > 0 && (
+                        {(activeTab === 'denied') && trackingDetails.denied.length > 0 && (
                             <div className="mb-8">
                                 <h3 className="text-xl font-semibold mb-4 text-red-400">Denied Requests</h3>
                                 <div className="space-y-3">
