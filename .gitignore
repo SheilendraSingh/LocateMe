@@ -183,6 +183,7 @@ socket.io/
 .env.staging
 .env.test
 .env.ci
+.env.example
 
 # =========================
 # Package manager additional files
