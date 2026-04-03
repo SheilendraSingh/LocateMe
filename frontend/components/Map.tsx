@@ -92,7 +92,7 @@ const Map: React.FC<MapProps> = ({ latitude, longitude, address, locationHistory
 
     return (
         <div className="relative w-full">
-            <div ref={mapContainer} className="h-64 sm:h-80 md:h-96 lg:h-[28rem] xl:h-[32rem] w-full rounded-lg" />
+            <div ref={mapContainer} className="h-64 sm:h-80 md:h-96 lg:h-112 xl:h-128 w-full rounded-lg" />
             {!process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN && (
                 <div className="absolute top-2 left-2 bg-yellow-500 text-black px-3 py-1 rounded text-xs sm:text-sm z-10">
                     ⚠️ Add Mapbox token to .env.local

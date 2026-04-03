@@ -446,7 +446,7 @@ export default function TrackPageContent() {
                                                                     <span className="text-xs sm:text-sm">{loc.timestamp ? new Date(loc.timestamp).toLocaleString() : 'Unknown time'}</span>
                                                                     <span className="text-xs opacity-75 bg-gray-500 px-2 py-1 rounded">{loc.method}</span>
                                                                 </div>
-                                                                <div className="mt-1 text-xs sm:text-sm break-words">{loc.address || `${loc.latitude.toFixed(6)}, ${loc.longitude.toFixed(6)}`}</div>
+                                                                <div className="mt-1 text-xs sm:text-sm wrap-break-word">{loc.address || `${loc.latitude.toFixed(6)}, ${loc.longitude.toFixed(6)}`}</div>
                                                             </div>
                                                         ))}
                                                     </div>
@@ -483,7 +483,7 @@ export default function TrackPageContent() {
                                                 </div>
                                                 <button
                                                     onClick={() => closeTracking(tracking.targetEmail)}
-                                                    className="px-3 py-2 sm:px-4 sm:py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-colors duration-200 text-sm sm:text-base flex-shrink-0"
+                                                    className="px-3 py-2 sm:px-4 sm:py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-colors duration-200 text-sm sm:text-base shrink-0"
                                                 >
                                                     Close
                                                 </button>
@@ -560,7 +560,7 @@ export default function TrackPageContent() {
                                                 </div>
                                                 <button
                                                     onClick={() => closeTracking(tracking.targetEmail)}
-                                                    className="px-3 py-2 sm:px-4 sm:py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-colors duration-200 text-sm sm:text-base flex-shrink-0"
+                                                    className="px-3 py-2 sm:px-4 sm:py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-colors duration-200 text-sm sm:text-base shrink-0"
                                                 >
                                                     Cancel
                                                 </button>
@@ -590,7 +590,7 @@ export default function TrackPageContent() {
                                                 </div>
                                                 <button
                                                     onClick={() => closeTracking(tracking.targetEmail)}
-                                                    className="px-3 py-2 sm:px-4 sm:py-2 bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors duration-200 text-sm sm:text-base flex-shrink-0"
+                                                    className="px-3 py-2 sm:px-4 sm:py-2 bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors duration-200 text-sm sm:text-base shrink-0"
                                                 >
                                                     Remove
                                                 </button>
