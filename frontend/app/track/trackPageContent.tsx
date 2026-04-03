@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import Map from "@/components/Map";
+import RealTimeTracking from "@/app/components/RealTimeTracking";
+
 
 interface Location {
     latitude: number;
@@ -62,7 +64,8 @@ export default function TrackPageContent() {
         | "denied"
         | "all"
         | "permissions"
-        | "history";
+        | "history"
+        | "realtime";
 
     const getActiveTab = (): ActiveTab => {
         const tab = searchParams.get("tab");
@@ -80,6 +83,8 @@ export default function TrackPageContent() {
                 return "permissions";
             case "history":
                 return "history";
+            case "realtime":
+                return "realtime";
             default:
                 return "main";
         }
@@ -357,67 +362,70 @@ export default function TrackPageContent() {
     };
 
     return (
-        <div className="min-h-screen bg-background text-foreground p-8">
+        <div className="min-h-screen bg-background text-foreground p-4 sm:p-6 lg:p-8">
             <Toaster />
-            <section className="py-12">
-                <div className="flex justify-between items-center">
-                    <div>
-                        <h1 className="text-4xl font-bold mb-4">Track Locations</h1>
-                        <p className="text-lg opacity-75">Request location tracking with user consent via OTP.</p>
+            <section className="py-6 sm:py-8 lg:py-12">
+                <div className="max-w-7xl mx-auto">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+                        <div className="flex-1">
+                            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4">Track Locations</h1>
+                            <p className="text-sm sm:text-base lg:text-lg opacity-75">Request location tracking with user consent via OTP.</p>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => router.push("/track?tab=all")}
+                            className="px-4 py-2 sm:px-6 sm:py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 flex items-center gap-2 text-sm sm:text-base self-start sm:self-auto"
+                        >
+                            📊 Manage Tracking
+                            {trackingStats.total > 0 && (
+                                <span className="bg-white text-blue-600 px-2 py-1 rounded-full text-xs font-bold">
+                                    {trackingStats.total}
+                                </span>
+                            )}
+                        </button>
                     </div>
-                    <button
-                        type="button"
-                        onClick={() => router.push("/track?tab=all")}
-                        className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 flex items-center gap-2"
-                    >
-                        📊 Manage Tracking
-                        {trackingStats.total > 0 && (
-                            <span className="bg-white text-blue-600 px-2 py-1 rounded-full text-xs font-bold">
-                                {trackingStats.total}
-                            </span>
-                        )}
-                    </button>
                 </div>
             </section>
 
             {/* Tracking Manager */}
             {activeTab !== 'main' && (
-                <section className="mb-12">
-                    <div className="p-8 bg-gray-800 rounded-lg shadow-md">
-                        <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-2xl font-bold">
+                <section className="mb-8 sm:mb-12">
+                    <div className="p-4 sm:p-6 lg:p-8 bg-gray-800 rounded-lg shadow-md">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                            <h2 className="text-xl sm:text-2xl font-bold">
                                 {activeTab === 'pending' ? 'Pending Requests' : null}
                                 {activeTab === 'active' ? 'Active Trackings' : null}
                                 {activeTab === 'denied' ? 'Denied Requests' : null}
                                 {activeTab === 'all' ? 'All Tracking Requests' : null}
                                 {activeTab === 'permissions' ? 'Manage Permissions' : null}
                                 {activeTab === 'history' ? 'Tracking History' : null}
+                                {activeTab === 'realtime' ? 'Real-Time Tracking' : null}
                             </h2>
                             <button
                                 onClick={() => router.push('/track')}
-                                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors duration-200"
+                                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors duration-200 text-sm sm:text-base"
                             >
                                 Back to Main
                             </button>
                         </div>
 
                         {/* Stats Overview */}
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                            <div className="bg-yellow-600 p-4 rounded-lg text-center">
-                                <div className="text-2xl font-bold">{trackingStats.pending}</div>
-                                <div className="text-sm">Pending</div>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+                            <div className="bg-yellow-600 p-3 sm:p-4 rounded-lg text-center">
+                                <div className="text-lg sm:text-2xl font-bold">{trackingStats.pending}</div>
+                                <div className="text-xs sm:text-sm">Pending</div>
                             </div>
-                            <div className="bg-green-600 p-4 rounded-lg text-center">
-                                <div className="text-2xl font-bold">{trackingStats.active}</div>
-                                <div className="text-sm">Active</div>
+                            <div className="bg-green-600 p-3 sm:p-4 rounded-lg text-center">
+                                <div className="text-lg sm:text-2xl font-bold">{trackingStats.active}</div>
+                                <div className="text-xs sm:text-sm">Active</div>
                             </div>
-                            <div className="bg-red-600 p-4 rounded-lg text-center">
-                                <div className="text-2xl font-bold">{trackingStats.denied}</div>
-                                <div className="text-sm">Denied</div>
+                            <div className="bg-red-600 p-3 sm:p-4 rounded-lg text-center">
+                                <div className="text-lg sm:text-2xl font-bold">{trackingStats.denied}</div>
+                                <div className="text-xs sm:text-sm">Denied</div>
                             </div>
-                            <div className="bg-blue-600 p-4 rounded-lg text-center">
-                                <div className="text-2xl font-bold">{trackingStats.total}</div>
-                                <div className="text-sm">Total</div>
+                            <div className="bg-blue-600 p-3 sm:p-4 rounded-lg text-center">
+                                <div className="text-lg sm:text-2xl font-bold">{trackingStats.total}</div>
+                                <div className="text-xs sm:text-sm">Total</div>
                             </div>
                         </div>
 
@@ -431,19 +439,19 @@ export default function TrackPageContent() {
                                             <div key={index} className="p-4 bg-gray-700 rounded-lg">
                                                 <h4 className="font-medium mb-2">{tracking.targetEmail}</h4>
                                                 {tracking.locationHistory && tracking.locationHistory.length > 0 ? (
-                                                    <div className="space-y-2">
+                                                    <div className="space-y-2 max-h-60 overflow-y-auto">
                                                         {tracking.locationHistory.slice(-10).reverse().map((loc, locIndex) => (
-                                                            <div key={locIndex} className="text-sm bg-gray-600 p-2 rounded">
-                                                                <div className="flex justify-between">
-                                                                    <span>{loc.timestamp ? new Date(loc.timestamp).toLocaleString() : 'Unknown time'}</span>
-                                                                    <span className="text-xs opacity-75">{loc.method}</span>
+                                                            <div key={locIndex} className="text-xs sm:text-sm bg-gray-600 p-2 sm:p-3 rounded">
+                                                                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-2">
+                                                                    <span className="text-xs sm:text-sm">{loc.timestamp ? new Date(loc.timestamp).toLocaleString() : 'Unknown time'}</span>
+                                                                    <span className="text-xs opacity-75 bg-gray-500 px-2 py-1 rounded">{loc.method}</span>
                                                                 </div>
-                                                                <div className="mt-1">{loc.address || `${loc.latitude.toFixed(6)}, ${loc.longitude.toFixed(6)}`}</div>
+                                                                <div className="mt-1 text-xs sm:text-sm break-words">{loc.address || `${loc.latitude.toFixed(6)}, ${loc.longitude.toFixed(6)}`}</div>
                                                             </div>
                                                         ))}
                                                     </div>
                                                 ) : (
-                                                    <p className="text-sm opacity-75">No location history available</p>
+                                                    <p className="text-xs sm:text-sm opacity-75">No location history available</p>
                                                 )}
                                             </div>
                                         ))}
@@ -456,56 +464,107 @@ export default function TrackPageContent() {
 
                         {/* Active Trackings */}
                         {(activeTab === 'active') && trackingDetails.active.length > 0 && (
-                            <div className="mb-8">
-                                <h3 className="text-xl font-semibold mb-4 text-green-400">Active Trackings</h3>
-                                <div className="space-y-3">
+                            <div className="mb-6 sm:mb-8">
+                                <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-green-400">Active Trackings</h3>
+                                <div className="space-y-3 sm:space-y-4">
                                     {trackingDetails.active.map((tracking, index) => (
-                                        <div key={index} className="flex justify-between items-center p-4 bg-gray-700 rounded-lg">
-                                            <div>
-                                                <div className="font-medium">{tracking.targetEmail}</div>
-                                                <div className="text-sm opacity-75">
-                                                    Started: {new Date(tracking.requestedAt).toLocaleDateString()}
-                                                    {tracking.lastLocation && (
-                                                        <span className="ml-2">
-                                                            • Last update: {new Date(tracking.lastLocation.timestamp).toLocaleTimeString()}
-                                                        </span>
-                                                    )}
+                                        <div key={index} className="p-3 sm:p-4 bg-gray-700 rounded-lg">
+                                            <div className="flex justify-between items-start gap-4">
+                                                <div className="flex-1">
+                                                    <div className="font-medium text-sm sm:text-base">{tracking.targetEmail}</div>
+                                                    <div className="text-xs sm:text-sm opacity-75 mt-1">
+                                                        Started: {new Date(tracking.requestedAt).toLocaleDateString()}
+                                                        {tracking.lastLocation && (
+                                                            <span className="block sm:inline sm:ml-2 mt-1 sm:mt-0">
+                                                                • Last update: {new Date(tracking.lastLocation.timestamp).toLocaleTimeString()}
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </div>
+                                                <button
+                                                    onClick={() => closeTracking(tracking.targetEmail)}
+                                                    className="px-3 py-2 sm:px-4 sm:py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-colors duration-200 text-sm sm:text-base flex-shrink-0"
+                                                >
+                                                    Close
+                                                </button>
                                             </div>
-                                            <button
-                                                onClick={() => closeTracking(tracking.targetEmail)}
-                                                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-colors duration-200"
-                                            >
-                                                Close
-                                            </button>
                                         </div>
                                     ))}
                                 </div>
                             </div>
                         )}
 
+                        {/* Real-Time Tracking */}
+                        {activeTab === 'realtime' && (
+                            <div className="mb-6 sm:mb-8">
+                                <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-purple-400">Real-Time Location Tracking</h3>
+                                <p className="text-sm sm:text-base text-gray-300 mb-4">
+                                    Select a user from your active trackings below to start real-time tracking with live WebSocket updates.
+                                </p>
+
+                                {trackingDetails.active.length > 0 ? (
+                                    <div className="space-y-4 sm:space-y-6">
+                                        {trackingDetails.active.map((tracking, index) => (
+                                            <div key={index} className="p-3 sm:p-4 bg-gray-700 rounded-lg">
+                                                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 sm:gap-4 mb-3 sm:mb-4">
+                                                    <div className="flex-1">
+                                                        <div className="font-medium text-base sm:text-lg">{tracking.targetEmail}</div>
+                                                        <div className="text-xs sm:text-sm opacity-75">
+                                                            Active since: {new Date(tracking.requestedAt).toLocaleString()}
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <div className="text-xs sm:text-sm text-green-400 font-semibold">● ACTIVE</div>
+                                                        <div className="text-xs opacity-75">Real-time ready</div>
+                                                    </div>
+                                                </div>
+
+                                                <RealTimeTracking targetEmail={tracking.targetEmail} />
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-center p-6 sm:p-8 bg-gray-700 rounded-lg">
+                                        <div className="text-3xl sm:text-4xl mb-3 sm:mb-4">📍</div>
+                                        <h4 className="text-base sm:text-lg font-semibold mb-2">No Active Trackings</h4>
+                                        <p className="text-xs sm:text-sm text-gray-400 mb-4">
+                                            You need active tracking permissions to use real-time tracking.
+                                        </p>
+                                        <button
+                                            onClick={() => router.push('/track')}
+                                            className="px-4 py-2 sm:px-6 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors duration-200 text-sm sm:text-base"
+                                        >
+                                            Start New Tracking Request
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
                         {/* Pending Requests */}
                         {(activeTab === 'pending') && trackingDetails.pending.length > 0 && (
-                            <div className="mb-8">
-                                <h3 className="text-xl font-semibold mb-4 text-yellow-400">Pending Requests</h3>
-                                <div className="space-y-3">
+                            <div className="mb-6 sm:mb-8">
+                                <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-yellow-400">Pending Requests</h3>
+                                <div className="space-y-3 sm:space-y-4">
                                     {trackingDetails.pending.map((tracking, index) => (
-                                        <div key={index} className="flex justify-between items-center p-4 bg-gray-700 rounded-lg">
-                                            <div>
-                                                <div className="font-medium">{tracking.targetEmail}</div>
-                                                <div className="text-sm opacity-75">
-                                                    Sent: {new Date(tracking.requestedAt).toLocaleDateString()}
+                                        <div key={index} className="p-3 sm:p-4 bg-gray-700 rounded-lg">
+                                            <div className="flex justify-between items-start gap-4">
+                                                <div className="flex-1">
+                                                    <div className="font-medium text-sm sm:text-base">{tracking.targetEmail}</div>
+                                                    <div className="text-xs sm:text-sm opacity-75 mt-1">
+                                                        Sent: {new Date(tracking.requestedAt).toLocaleDateString()}
+                                                    </div>
+                                                    <div className="text-xs text-yellow-400 mt-1">
+                                                        Waiting for user to verify OTP
+                                                    </div>
                                                 </div>
-                                                <div className="text-xs text-yellow-400 mt-1">
-                                                    Waiting for user to verify OTP
-                                                </div>
+                                                <button
+                                                    onClick={() => closeTracking(tracking.targetEmail)}
+                                                    className="px-3 py-2 sm:px-4 sm:py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-colors duration-200 text-sm sm:text-base flex-shrink-0"
+                                                >
+                                                    Cancel
+                                                </button>
                                             </div>
-                                            <button
-                                                onClick={() => closeTracking(tracking.targetEmail)}
-                                                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-colors duration-200"
-                                            >
-                                                Cancel
-                                            </button>
                                         </div>
                                     ))}
                                 </div>
@@ -514,26 +573,28 @@ export default function TrackPageContent() {
 
                         {/* Denied Requests */}
                         {(activeTab === 'denied') && trackingDetails.denied.length > 0 && (
-                            <div className="mb-8">
-                                <h3 className="text-xl font-semibold mb-4 text-red-400">Denied Requests</h3>
-                                <div className="space-y-3">
+                            <div className="mb-6 sm:mb-8">
+                                <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-red-400">Denied Requests</h3>
+                                <div className="space-y-3 sm:space-y-4">
                                     {trackingDetails.denied.map((tracking, index) => (
-                                        <div key={index} className="flex justify-between items-center p-4 bg-gray-700 rounded-lg">
-                                            <div>
-                                                <div className="font-medium">{tracking.targetEmail}</div>
-                                                <div className="text-sm opacity-75">
-                                                    Denied: {tracking.deniedAt ? new Date(tracking.deniedAt).toLocaleDateString() : 'Unknown'}
+                                        <div key={index} className="p-3 sm:p-4 bg-gray-700 rounded-lg">
+                                            <div className="flex justify-between items-start gap-4">
+                                                <div className="flex-1">
+                                                    <div className="font-medium text-sm sm:text-base">{tracking.targetEmail}</div>
+                                                    <div className="text-xs sm:text-sm opacity-75 mt-1">
+                                                        Denied: {tracking.deniedAt ? new Date(tracking.deniedAt).toLocaleDateString() : 'Unknown'}
+                                                    </div>
+                                                    <div className="text-xs text-red-400 mt-1">
+                                                        {tracking.deniedReason}
+                                                    </div>
                                                 </div>
-                                                <div className="text-xs text-red-400 mt-1">
-                                                    {tracking.deniedReason}
-                                                </div>
+                                                <button
+                                                    onClick={() => closeTracking(tracking.targetEmail)}
+                                                    className="px-3 py-2 sm:px-4 sm:py-2 bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors duration-200 text-sm sm:text-base flex-shrink-0"
+                                                >
+                                                    Remove
+                                                </button>
                                             </div>
-                                            <button
-                                                onClick={() => closeTracking(tracking.targetEmail)}
-                                                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors duration-200"
-                                            >
-                                                Remove
-                                            </button>
                                         </div>
                                     ))}
                                 </div>
@@ -542,28 +603,30 @@ export default function TrackPageContent() {
 
                         {/* Permissions Management */}
                         {activeTab === 'permissions' && (
-                            <div className="mb-8">
-                                <h3 className="text-xl font-semibold mb-4 text-orange-400">Manage Permissions</h3>
-                                <div className="space-y-4">
+                            <div className="mb-6 sm:mb-8">
+                                <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-orange-400">Manage Permissions</h3>
+                                <div className="space-y-3 sm:space-y-4">
                                     {trackingDetails.active.map((tracking, index) => (
-                                        <div key={index} className="p-4 bg-gray-700 rounded-lg">
-                                            <div className="flex justify-between items-center mb-2">
-                                                <div className="font-medium">{tracking.targetEmail}</div>
-                                                <div className="text-sm text-green-400">Active</div>
+                                        <div key={index} className="p-3 sm:p-4 bg-gray-700 rounded-lg">
+                                            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 sm:gap-4 mb-3">
+                                                <div className="flex-1">
+                                                    <div className="font-medium text-sm sm:text-base">{tracking.targetEmail}</div>
+                                                    <div className="text-xs sm:text-sm opacity-75 mb-2 sm:mb-0">
+                                                        Started: {new Date(tracking.requestedAt).toLocaleDateString()}
+                                                    </div>
+                                                </div>
+                                                <div className="text-xs sm:text-sm text-green-400 self-start sm:self-auto">Active</div>
                                             </div>
-                                            <div className="text-sm opacity-75 mb-3">
-                                                Started: {new Date(tracking.requestedAt).toLocaleDateString()}
-                                            </div>
-                                            <div className="flex gap-2">
+                                            <div className="flex flex-col sm:flex-row gap-2">
                                                 <button
                                                     onClick={() => closeTracking(tracking.targetEmail)}
-                                                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-colors duration-200"
+                                                    className="flex-1 px-3 py-2 sm:px-4 sm:py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-colors duration-200 text-sm sm:text-base"
                                                 >
                                                     Stop Tracking
                                                 </button>
                                                 <button
                                                     onClick={() => toast.success("Real-time updates are active")}
-                                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors duration-200"
+                                                    className="flex-1 px-3 py-2 sm:px-4 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors duration-200 text-sm sm:text-base"
                                                 >
                                                     View Live Location
                                                 </button>
@@ -571,7 +634,7 @@ export default function TrackPageContent() {
                                         </div>
                                     ))}
                                     {trackingDetails.active.length === 0 && (
-                                        <p className="text-gray-400">No active permissions to manage</p>
+                                        <p className="text-sm sm:text-base text-gray-400">No active permissions to manage</p>
                                     )}
                                 </div>
                             </div>
@@ -580,10 +643,10 @@ export default function TrackPageContent() {
                 </section>
             )}
 
-            <section className="mb-12">
-                <div className="p-8 bg-gray-800 rounded-lg shadow-md max-w-md mx-auto">
-                    <h2 className="text-2xl font-bold mb-6">Request Tracking</h2>
-                    <p className="text-sm opacity-75 mb-4">Enter the person&apos;s email address to send OTP for location tracking consent.</p>
+            <section className="mb-8 sm:mb-12">
+                <div className="max-w-2xl mx-auto p-4 sm:p-6 lg:p-8 bg-gray-800 rounded-lg shadow-md">
+                    <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Request Tracking</h2>
+                    <p className="text-sm sm:text-base opacity-75 mb-4 sm:mb-6">Enter the person&apos;s email address to send OTP for location tracking consent.</p>
                     <div className="space-y-4">
                         <div>
                             <label htmlFor="targetEmail" className="block text-sm font-medium mb-2">
@@ -643,34 +706,34 @@ export default function TrackPageContent() {
                                     <p className="text-sm opacity-75 mt-2">Choose your preferred location method:</p>
                                 </div>
 
-                                <div className="space-y-3">
-                                    <label className="flex items-center space-x-3 p-3 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <div className="space-y-3 sm:space-y-4">
+                                    <label className="flex items-start space-x-3 p-3 sm:p-4 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700">
                                         <input
                                             type="radio"
                                             name="locationMethod"
                                             value="geolocation"
                                             checked={locationMethod === "geolocation"}
                                             onChange={(e) => setLocationMethod(e.target.value as "geolocation" | "ip")}
-                                            className="text-blue-600 focus:ring-blue-500"
+                                            className="text-blue-600 focus:ring-blue-500 mt-1"
                                         />
-                                        <div>
-                                            <div className="font-medium">GPS Location (Geolocation)</div>
-                                            <div className="text-sm opacity-75">More accurate • Requires location permission • Real-time GPS</div>
+                                        <div className="flex-1">
+                                            <div className="font-medium text-sm sm:text-base">GPS Location (Geolocation)</div>
+                                            <div className="text-xs sm:text-sm opacity-75">More accurate • Requires location permission • Real-time GPS</div>
                                         </div>
                                     </label>
 
-                                    <label className="flex items-center space-x-3 p-3 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700">
+                                    <label className="flex items-start space-x-3 p-3 sm:p-4 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700">
                                         <input
                                             type="radio"
                                             name="locationMethod"
                                             value="ip"
                                             checked={locationMethod === "ip"}
                                             onChange={(e) => setLocationMethod(e.target.value as "geolocation" | "ip")}
-                                            className="text-blue-600 focus:ring-blue-500"
+                                            className="text-blue-600 focus:ring-blue-500 mt-1"
                                         />
-                                        <div>
-                                            <div className="font-medium">IP Address Location</div>
-                                            <div className="text-sm opacity-75">Works everywhere • No permission needed • City-level accuracy</div>
+                                        <div className="flex-1">
+                                            <div className="font-medium text-sm sm:text-base">IP Address Location</div>
+                                            <div className="text-xs sm:text-sm opacity-75">Works everywhere • No permission needed • City-level accuracy</div>
                                         </div>
                                     </label>
                                 </div>
@@ -689,29 +752,29 @@ export default function TrackPageContent() {
             </section>
 
             {location && (
-                <section className="mb-12">
-                    <h2 className="text-2xl font-bold mb-6">Location Details</h2>
-                    <div className="p-8 bg-gray-800 rounded-lg shadow-md">
-                        <p className="text-lg font-semibold mb-2">📍 Address:</p>
-                        <p className="text-gray-300 mb-4">{location.address || "Getting address..."}</p>
-                        <p className="text-sm text-gray-400">Method: {location.method}</p>
-                        <p className="text-sm text-gray-400">Coordinates: {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}</p>
+                <section className="mb-8 sm:mb-12">
+                    <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Location Details</h2>
+                    <div className="p-4 sm:p-6 lg:p-8 bg-gray-800 rounded-lg shadow-md">
+                        <p className="text-base sm:text-lg font-semibold mb-2">📍 Address:</p>
+                        <p className="text-gray-300 mb-3 sm:mb-4 text-sm sm:text-base">{location.address || "Getting address..."}</p>
+                        <p className="text-xs sm:text-sm text-gray-400 mb-2">Method: {location.method}</p>
+                        <p className="text-xs sm:text-sm text-gray-400 mb-4">Coordinates: {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}</p>
 
                         {location.method === "geolocation" && (
-                            <div className="mt-6 pt-4 border-t border-gray-600">
-                                <h3 className="text-lg font-semibold mb-3">Real-Time Tracking</h3>
-                                <div className="flex gap-3">
+                            <div className="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-gray-600">
+                                <h3 className="text-base sm:text-lg font-semibold mb-3">Real-Time Tracking</h3>
+                                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                                     {!isRealTimeTracking ? (
                                         <button
                                             onClick={startRealTimeTracking}
-                                            className="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors duration-200"
+                                            className="flex-1 bg-green-600 hover:bg-green-700 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition-colors duration-200 text-sm sm:text-base"
                                         >
                                             ▶️ Start Live Tracking
                                         </button>
                                     ) : (
                                         <button
                                             onClick={stopRealTimeTracking}
-                                            className="flex-1 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors duration-200"
+                                            className="flex-1 bg-red-600 hover:bg-red-700 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition-colors duration-200 text-sm sm:text-base"
                                         >
                                             ⏹️ Stop Live Tracking
                                         </button>
@@ -720,7 +783,7 @@ export default function TrackPageContent() {
                                 {isRealTimeTracking && (
                                     <div className="mt-3 flex items-center gap-2 text-green-400">
                                         <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                                        <span className="text-sm">Live tracking active - Location updates every few seconds</span>
+                                        <span className="text-xs sm:text-sm">Live tracking active - Location updates every few seconds</span>
                                     </div>
                                 )}
                                 {locationHistory.length > 1 && (
@@ -735,9 +798,9 @@ export default function TrackPageContent() {
             )}
 
             {location && (
-                <section className="mb-12">
-                    <h2 className="text-2xl font-bold mb-6">Tracking Map</h2>
-                    <div className="bg-gray-800 rounded-lg shadow-md p-4">
+                <section className="mb-8 sm:mb-12">
+                    <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Tracking Map</h2>
+                    <div className="bg-gray-800 rounded-lg shadow-md p-2 sm:p-4">
                         <Map
                             latitude={location.latitude}
                             longitude={location.longitude}

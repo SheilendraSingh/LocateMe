@@ -45,10 +45,10 @@ export default function SignupPage() {
     };
 
     return (
-        <div className="h-full bg-background text-foreground flex items-center justify-center px-4 py-38">
+        <div className="min-h-screen bg-background text-foreground flex items-center justify-center px-4 py-8 sm:py-12">
             <Toaster />
-            <div className="bg-background p-8 rounded-lg shadow-md w-full max-w-md">
-                <h1 className="text-3xl font-bold text-center mb-11">Sign Up for LocateMe</h1>
+            <div className="bg-background p-6 sm:p-8 rounded-lg shadow-md w-full max-w-md border border-gray-200 dark:border-gray-700">
+                <h1 className="text-2xl sm:text-3xl font-bold text-center mb-6 sm:mb-8">Sign Up for LocateMe</h1>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>

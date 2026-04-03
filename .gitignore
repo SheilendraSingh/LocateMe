@@ -66,3 +66,175 @@ coverage/
 # Misc
 # =========================
 *.pem
+
+# =========================
+# Database
+# =========================
+*.db
+*.sqlite
+*.sqlite3
+data/
+mongodb/
+
+# =========================
+# IDE/Editor files
+# =========================
+.idea/
+*.swp
+*.swo
+*~
+
+# =========================
+# OS Generated Files
+# =========================
+# Windows
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+Thumbs.db
+ehthumbs.db
+ehthumbs_vista.db
+*.lnk
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# =========================
+# Temporary files
+# =========================
+*.tmp
+*.temp
+.tmp/
+temp/
+tmp/
+
+# =========================
+# Backup files
+# =========================
+*.bak
+*.backup
+*.old
+*.orig
+*~
+
+# =========================
+# SSL Certificates
+# =========================
+*.key
+*.crt
+*.pem
+*.p12
+*.pfx
+certs/
+ssl/
+
+# =========================
+# Session files
+# =========================
+sessions/
+*.session
+
+# =========================
+# Cache directories
+# =========================
+.cache/
+.parcel-cache/
+.vite/
+.turbo/
+
+# =========================
+# Test results and coverage
+# =========================
+test-results/
+playwright-report/
+playwright/.cache/
+junit.xml
+results.xml
+
+# =========================
+# WebSocket/Socket files
+# =========================
+*.sock
+socket.io/
+
+# =========================
+# Environment files (additional patterns)
+# =========================
+.env.development
+.env.production
+.env.staging
+.env.test
+.env.ci
+
+# =========================
+# Package manager additional files
+# =========================
+.yarn-integrity
+.npm
+.eslintcache
+.stylelintcache
+
+# =========================
+# Build artifacts (additional)
+# =========================
+*.tsbuildinfo
+.tscache/
+dist/
+build/
+out/
+.next/
+.nuxt/
+
+# =========================
+# Docker
+# =========================
+.dockerignore
+Dockerfile*
+docker-compose*.yml
+.docker/
+
+# =========================
+# CI/CD
+# =========================
+.github/workflows/*.log
+.gitlab-ci.yml
+.travis.yml
+.circleci/
+
+# =========================
+# Documentation generated
+# =========================
+docs/build/
+docs/.vuepress/dist/
+
+# =========================
+# Local development
+# =========================
+.repl_history
+.history
+*.tgz
+*.tar.gz
+
+# =========================
+# Security
+# =========================
+.secrets/
+secrets/

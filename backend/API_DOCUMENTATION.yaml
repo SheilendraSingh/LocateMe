@@ -1,0 +1,606 @@
+openapi: 3.0.0
+info:
+  title: LocateMe API
+  description: Real-time location tracking system with secure authentication and OTP verification
+  version: 1.0.0
+  contact:
+    name: LocateMe Team
+    email: support@locateme.com
+  license:
+    name: ISC
+
+servers:
+  - url: http://localhost:5000/api
+    description: Development server
+  - url: https://api.locateme.com/api
+    description: Production server
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained after login/registration
+
+  schemas:
+    User:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: "507f1f77bcf86cd799439011"
+        name:
+          type: string
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          example: "john@example.com"
+        phone:
+          type: string
+          example: "+1234567890"
+      required:
+        - _id
+        - name
+        - email
+
+    AuthResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        _id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        token:
+          type: string
+      example:
+        success: true
+        message: "Login successful"
+        _id: "507f1f77bcf86cd799439011"
+        name: "John Doe"
+        email: "john@example.com"
+        phone: "+1234567890"
+        token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+    TrackingRequest:
+      type: object
+      properties:
+        targetEmail:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [pending, active, denied]
+        requestedAt:
+          type: string
+          format: date-time
+        lastLocation:
+          $ref: "#/components/schemas/Location"
+        locationHistory:
+          type: array
+          items:
+            $ref: "#/components/schemas/Location"
+
+    Location:
+      type: object
+      properties:
+        latitude:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+        longitude:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+        address:
+          type: string
+        method:
+          type: string
+          example: "geolocation"
+        timestamp:
+          type: string
+          format: date-time
+
+    TrackingStats:
+      type: object
+      properties:
+        pending:
+          type: integer
+        active:
+          type: integer
+        denied:
+          type: integer
+        total:
+          type: integer
+
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+        error:
+          type: string
+          description: Only in development mode
+        details:
+          type: string
+          description: Only in development mode
+
+paths:
+  /auth/register:
+    post:
+      summary: Register a new user
+      operationId: registerUser
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                email:
+                  type: string
+                  format: email
+                phone:
+                  type: string
+                password:
+                  type: string
+                  minLength: 8
+              required:
+                - name
+                - email
+                - password
+              example:
+                name: "John Doe"
+                email: "john@example.com"
+                phone: "+1234567890"
+                password: "SecurePass123!"
+      responses:
+        "201":
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: Email already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /auth/login:
+    post:
+      summary: Login user
+      operationId: loginUser
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+              required:
+                - email
+                - password
+              example:
+                email: "john@example.com"
+                password: "SecurePass123!"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Missing required fields
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: Too many login attempts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /auth/me:
+    get:
+      summary: Get current user profile
+      operationId: getMe
+      tags:
+        - Authentication
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Current user data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /auth/send-tracking-otp:
+    post:
+      summary: Send OTP to user for location tracking permission
+      operationId: sendTrackingOTP
+      tags:
+        - Tracking
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                targetEmail:
+                  type: string
+                  format: email
+              required:
+                - targetEmail
+              example:
+                targetEmail: "jane@example.com"
+      responses:
+        "200":
+          description: OTP sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        "400":
+          description: Invalid input or request already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Failed to send OTP
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /auth/verify-otp:
+    post:
+      summary: Verify OTP to activate tracking
+      operationId: verifyOTP
+      tags:
+        - Tracking
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                otp:
+                  type: string
+                  minLength: 6
+                  maxLength: 6
+                targetEmail:
+                  type: string
+                  format: email
+              required:
+                - otp
+              example:
+                otp: "123456"
+                targetEmail: "jane@example.com"
+      responses:
+        "200":
+          description: OTP verified successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        "400":
+          description: Invalid or expired OTP
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: No pending tracking request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /auth/tracking-status:
+    get:
+      summary: Get all tracking requests and statistics
+      operationId: getTrackingStatus
+      tags:
+        - Tracking
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Tracking statistics and details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  stats:
+                    $ref: "#/components/schemas/TrackingStats"
+                  details:
+                    type: object
+                    properties:
+                      pending:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/TrackingRequest"
+                      active:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/TrackingRequest"
+                      denied:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/TrackingRequest"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /auth/share-location:
+    post:
+      summary: Share current location with a tracking requester
+      operationId: shareLocationWithRequester
+      tags:
+        - Location
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                requesterEmail:
+                  type: string
+                  format: email
+                latitude:
+                  type: number
+                  format: double
+                  minimum: -90
+                  maximum: 90
+                longitude:
+                  type: number
+                  format: double
+                  minimum: -180
+                  maximum: 180
+                address:
+                  type: string
+                method:
+                  type: string
+                  default: "geolocation"
+              required:
+                - requesterEmail
+                - latitude
+                - longitude
+              example:
+                requesterEmail: "john@example.com"
+                latitude: 40.7128
+                longitude: -74.0060
+                address: "New York, USA"
+                method: "geolocation"
+      responses:
+        "200":
+          description: Location shared successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  locationData:
+                    $ref: "#/components/schemas/Location"
+        "400":
+          description: Invalid location data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: No active tracking request from this requester
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /auth/tracked-user-location:
+    get:
+      summary: Get latest location of a tracked user
+      operationId: getTrackedUserLocation
+      tags:
+        - Location
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: targetEmail
+          in: query
+          required: true
+          schema:
+            type: string
+            format: email
+          example: "jane@example.com"
+      responses:
+        "200":
+          description: Latest location data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  targetEmail:
+                    type: string
+                  lastLocation:
+                    $ref: "#/components/schemas/Location"
+                  locationHistory:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Location"
+                    description: Last 10 location updates
+                  updatedAt:
+                    type: string
+                    format: date-time
+        "400":
+          description: Missing target email
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: No active tracking permission
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /auth/close-tracking:
+    post:
+      summary: Stop tracking a user
+      operationId: closeTracking
+      tags:
+        - Tracking
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                targetEmail:
+                  type: string
+                  format: email
+              required:
+                - targetEmail
+              example:
+                targetEmail: "jane@example.com"
+      responses:
+        "200":
+          description: Tracking closed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        "404":
+          description: Tracking request not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /health:
+    get:
+      summary: Health check endpoint
+      operationId: healthCheck
+      tags:
+        - System
+      responses:
+        "200":
+          description: Server is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string

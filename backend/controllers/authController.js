@@ -2,6 +2,7 @@ import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
+import { validateStrongPassword } from "../middleware/sanitizeMiddleware.js";
 
 // Generate JWT
 const generateToken = (id) =>
@@ -63,7 +64,9 @@ const formatUser = (user) => {
 };
 
 const validatePassword = (password) => {
-  return password.length >= 6;
+  // Minimum 8 characters for better security
+  // Can contain letters, numbers, and special characters
+  return password.length >= 8;
 };
 
 //REGISTER and LOGIN functions with improved error handling, input validation, and consistent response formatting for better security and user experience
@@ -71,42 +74,76 @@ export const registerUser = async (req, res) => {
   try {
     const { name, email, phone, password } = req.body;
 
+    // Validate required fields
     if (!name || !email || !password) {
-      return res
-        .status(400)
-        .json({ message: "Please fill all required fields" });
+      return res.status(400).json({
+        success: false,
+        message: "Please provide name, email, and password",
+      });
     }
 
     if (!validateEmail(email)) {
-      return res.status(400).json({ message: "Invalid email format" });
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a valid email address",
+      });
     }
 
     if (!validatePassword(password)) {
-      return res
-        .status(400)
-        .json({ message: "Password must be at least 6 characters" });
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 8 characters long",
+      });
     }
 
-    const userExists = await User.findOne({ email });
-    if (userExists)
-      return res.status(400).json({ message: "User already exists" });
+    // Check if user already exists
+    const userExists = await User.findOne({ email: email.toLowerCase() });
+    if (userExists) {
+      return res.status(409).json({
+        success: false,
+        message: "Email already registered. Please login instead.",
+      });
+    }
 
+    // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    // Create new user
     const user = await User.create({
-      name,
-      email,
-      phone,
+      name: name.trim(),
+      email: email.toLowerCase(),
+      phone: phone ? phone.trim() : undefined,
       password: hashedPassword,
     });
 
     const token = generateToken(user._id);
-    res.json({ ...formatUser(user), token });
+
+    console.log(`✅ New user registered: ${email}`);
+    res.status(201).json({
+      success: true,
+      message: "User registered successfully",
+      ...formatUser(user),
+      token,
+    });
   } catch (error) {
-    return res
-      .status(500)
-      .json({ message: "Server error during registration" });
+    console.error("Registration error:", {
+      email: req.body.email,
+      error: error.message,
+      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
+    });
+
+    if (error.code === 11000) {
+      return res.status(409).json({
+        success: false,
+        message: "Email already exists",
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: "Error registering user. Please try again later.",
+    });
   }
 };
 
@@ -114,20 +151,61 @@ export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // Validate inputs
     if (!email || !password) {
-      return res.status(400).json({ message: "Email and password required" });
+      return res.status(400).json({
+        success: false,
+        message: "Please provide email and password",
+      });
     }
 
-    const user = await User.findOne({ email });
-
-    if (user && (await bcrypt.compare(password, user.password))) {
-      const token = generateToken(user._id);
-      res.json({ ...formatUser(user), token });
-    } else {
-      return res.status(401).json({ message: "Invalid credentials" });
+    if (!validateEmail(email)) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a valid email address",
+      });
     }
+
+    // Find user by email
+    const user = await User.findOne({ email: email.toLowerCase() });
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password",
+      });
+    }
+
+    // Verify password
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      console.warn(`⚠️ Failed login attempt for: ${email}`);
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password",
+      });
+    }
+
+    const token = generateToken(user._id);
+
+    console.log(`✅ User logged in: ${email}`);
+    res.status(200).json({
+      success: true,
+      message: "Login successful",
+      ...formatUser(user),
+      token,
+    });
   } catch (error) {
-    return res.status(500).json({ message: "Server error during login" });
+    console.error("Login error:", {
+      email: req.body.email,
+      error: error.message,
+    });
+
+    res.status(500).json({
+      success: false,
+      message: "Error during login. Please try again later.",
+    });
   }
 };
 
@@ -184,22 +262,31 @@ export const sendTrackingOTP = async (req, res) => {
     const user = req.user;
 
     if (!targetEmail) {
-      return res
-        .status(400)
-        .json({ message: "Please provide an email address" });
+      return res.status(400).json({
+        success: false,
+        message: "Please provide target email address",
+      });
+    }
+
+    if (!validateEmail(targetEmail)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid target email format",
+      });
     }
 
     // Check if tracking request already exists (pending or active)
     const existingRequest = user.trackingRequests.find(
       (req) =>
-        req.targetEmail === targetEmail &&
+        req.targetEmail === targetEmail.toLowerCase() &&
         (req.status === "pending" || req.status === "active"),
     );
 
     if (existingRequest) {
-      return res
-        .status(400)
-        .json({ message: "Tracking request already exists for this email" });
+      return res.status(400).json({
+        success: false,
+        message: "Active tracking request already exists for this email",
+      });
     }
 
     const otp = generateOTP();
@@ -207,14 +294,14 @@ export const sendTrackingOTP = async (req, res) => {
 
     // Create deny token
     const denyToken = jwt.sign(
-      { requesterId: user._id, targetEmail },
+      { requesterId: user._id, targetEmail: targetEmail.toLowerCase() },
       process.env.JWT_SECRET,
       { expiresIn: "10m" },
     );
 
     // Create tracking request
     const trackingRequest = {
-      targetEmail,
+      targetEmail: targetEmail.toLowerCase(),
       status: "pending",
       requestedAt: new Date(),
     };
@@ -229,61 +316,103 @@ export const sendTrackingOTP = async (req, res) => {
       process.env.BACKEND_URL || "http://localhost:5000"
     }/api/auth/deny-tracking-link/${denyToken}`;
 
-    let emailSent = false;
-
     try {
       await sendEmailOTP(targetEmail, otp, denyLink);
-      emailSent = true;
+      console.log(`✅ Tracking OTP sent to: ${targetEmail}`);
+      res.status(200).json({
+        success: true,
+        message: "OTP sent successfully. User has 10 minutes to respond.",
+      });
     } catch (emailError) {
-      console.error("Email sending failed:", emailError);
-    }
+      console.error("Email sending failed:", emailError.message);
 
-    if (!emailSent) {
+      // Clean up failed request
+      user.trackingRequests = user.trackingRequests.filter(
+        (r) => r.targetEmail !== targetEmail.toLowerCase(),
+      );
+      user.tempOtp = undefined;
+      user.tempOtpExpiry = undefined;
+      await user.save();
+
       return res.status(500).json({
-        message: "Failed to send OTP. Please check your email configuration.",
+        success: false,
+        message:
+          "Failed to send OTP. Check email configuration or try again later.",
+        error:
+          process.env.NODE_ENV === "development"
+            ? emailError.message
+            : undefined,
       });
     }
-
-    res.status(200).json({ message: "OTP sent via email" });
   } catch (error) {
     console.error("OTP sending error:", error);
-    if (error.name === "ValidationError") {
-      return res.status(400).json({
-        message: "Validation error",
-        details: Object.values(error.errors)
-          .map((err) => err.message)
-          .join(", "),
-      });
-    }
-    res.status(500).json({ message: "Failed to send OTP" });
+    res.status(500).json({
+      success: false,
+      message: "Failed to send OTP",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
   }
 };
 
 // Verify OTP
 export const verifyOTP = async (req, res) => {
   try {
-    const { otp } = req.body;
+    const { otp, targetEmail } = req.body;
     const user = req.user;
 
-    if (user.tempOtp !== otp || user.tempOtpExpiry < new Date()) {
-      return res.status(400).json({ message: "Invalid or expired OTP" });
+    if (!otp) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide the OTP",
+      });
+    }
+
+    if (user.tempOtp !== otp) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid OTP",
+      });
+    }
+
+    if (!user.tempOtpExpiry || user.tempOtpExpiry < new Date()) {
+      return res.status(400).json({
+        success: false,
+        message: "OTP has expired. Please request a new one.",
+      });
     }
 
     // Find the pending tracking request and mark it as active
     const pendingRequest = user.trackingRequests.find(
-      (req) => req.status === "pending",
+      (req) =>
+        req.status === "pending" &&
+        (!targetEmail || req.targetEmail === targetEmail.toLowerCase()),
     );
-    if (pendingRequest) {
-      pendingRequest.status = "active";
+
+    if (!pendingRequest) {
+      return res.status(404).json({
+        success: false,
+        message: "No pending tracking request found",
+      });
     }
+
+    pendingRequest.status = "active";
 
     user.tempOtp = undefined;
     user.tempOtpExpiry = undefined;
     await user.save();
 
-    res.status(200).json({ message: "OTP verified" });
+    console.log(`✅ OTP verified for tracking: ${pendingRequest.targetEmail}`);
+    res.status(200).json({
+      success: true,
+      message: "OTP verified successfully. Tracking is now active.",
+    });
   } catch (error) {
-    res.status(500).json({ message: "Failed to verify OTP" });
+    console.error("OTP verification error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to verify OTP",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
   }
 };
 
@@ -323,40 +452,80 @@ export const updateLocation = async (req, res) => {
     const { targetEmail, latitude, longitude, address, method } = req.body;
     const user = req.user;
 
+    if (!targetEmail) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide target email",
+      });
+    }
+
+    if (latitude === undefined || longitude === undefined) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid location data. Latitude and longitude required.",
+      });
+    }
+
+    // Validate coordinates
+    if (
+      latitude < -90 ||
+      latitude > 90 ||
+      longitude < -180 ||
+      longitude > 180
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Invalid coordinates. Latitude must be between -90 and 90, longitude between -180 and 180",
+      });
+    }
+
     const trackingRequest = user.trackingRequests.find(
-      (req) => req.targetEmail === targetEmail && req.status === "active",
+      (req) =>
+        req.targetEmail === targetEmail.toLowerCase() &&
+        req.status === "active",
     );
 
     if (!trackingRequest) {
-      return res.status(404).json({ message: "Active tracking not found" });
-    }
-
-    if (!latitude || !longitude) {
-      return res.status(400).json({ message: "Invalid location data" });
+      return res.status(404).json({
+        success: false,
+        message: "Active tracking not found for this email",
+      });
     }
 
     const locationData = {
-      latitude,
-      longitude,
-      address,
-      method,
+      latitude: Number(latitude),
+      longitude: Number(longitude),
+      address: address || "Unknown location",
+      method: method || "geolocation",
       timestamp: new Date(),
     };
 
     trackingRequest.lastLocation = locationData;
     trackingRequest.locationHistory.push(locationData);
 
-    // Keep only last 50 location updates
-    if (trackingRequest.locationHistory.length > 50) {
+    // Keep only last 100 location updates (increased from 50)
+    if (trackingRequest.locationHistory.length > 100) {
       trackingRequest.locationHistory =
-        trackingRequest.locationHistory.slice(-50);
+        trackingRequest.locationHistory.slice(-100);
     }
 
     await user.save();
 
-    res.status(200).json({ message: "Location updated successfully" });
+    console.log(
+      `✅ Location updated for: ${targetEmail} at ${latitude}, ${longitude}`,
+    );
+    res.status(200).json({
+      success: true,
+      message: "Location updated successfully",
+    });
   } catch (error) {
-    res.status(500).json({ message: "Failed to update location" });
+    console.error("Location update error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update location",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
   }
 };
 
@@ -376,17 +545,38 @@ export const getTrackingStatus = async (req, res) => {
     };
 
     const trackingDetails = {
-      pending: user.trackingRequests.filter((req) => req.status === "pending"),
-      active: user.trackingRequests.filter((req) => req.status === "active"),
-      denied: user.trackingRequests.filter((req) => req.status === "denied"),
+      pending: user.trackingRequests
+        .filter((req) => req.status === "pending")
+        .map((r) => ({
+          ...r,
+          requestedAtTime: new Date(r.requestedAt).toISOString(),
+        })),
+      active: user.trackingRequests
+        .filter((req) => req.status === "active")
+        .map((r) => ({
+          ...r,
+          activeSince: new Date(r.requestedAt).toISOString(),
+        })),
+      denied: user.trackingRequests
+        .filter((req) => req.status === "denied")
+        .map((r) => ({
+          ...r,
+          deniedAtTime: new Date(r.deniedAt).toISOString(),
+        })),
     };
 
     res.status(200).json({
+      success: true,
       stats: trackingStats,
       details: trackingDetails,
     });
   } catch (error) {
-    res.status(500).json({ message: "Failed to get tracking status" });
+    console.error("Get tracking status error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to get tracking status",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
   }
 };
 

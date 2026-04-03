@@ -77,21 +77,21 @@ export default function HomePage() {
       <div id="hero" className="relative z-20 fade-in max-w-7xl mx-auto">
 
         {/* HERO SECTION */}
-        <section className="flex flex-col items-center justify-center text-center py-20 px-4 sm:px-6 lg:px-8">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4">
+        <section className="flex flex-col items-center justify-center text-center py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold mb-4 sm:mb-6">
             Welcome to LocateMe
           </h1>
 
-          <p className="text-lg sm:text-xl mb-8 max-w-2xl">
+          <p className="text-base sm:text-lg lg:text-xl mb-6 sm:mb-8 max-w-2xl">
             Track locations effortlessly with our advanced web app.
             Stay connected and secure wherever you go.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             {user ? (
               <Link
                 href="/dashboard"
-                className="bg-green-600 hover:bg-green-700 hover:scale-110 text-white px-6 py-3 rounded-lg transition-all duration-500 cursor-pointer"
+                className="bg-green-600 hover:bg-green-700 hover:scale-105 text-white px-6 sm:px-8 py-3 sm:py-3.5 rounded-lg transition-all duration-300 cursor-pointer text-center"
               >
                 Go to Dashboard
               </Link>
@@ -99,14 +99,14 @@ export default function HomePage() {
               <>
                 <Link
                   href="/auth/signup"
-                  className="bg-gray-300 hover:bg-white hover:scale-110 text-black px-6 py-3 rounded-lg transition-all duration-500 cursor-pointer"
+                  className="bg-gray-300 hover:bg-white hover:scale-105 text-black px-6 sm:px-8 py-3 sm:py-3.5 rounded-lg transition-all duration-300 cursor-pointer text-center"
                 >
                   Get Started
                 </Link>
 
                 <Link
                   href="/auth/login"
-                  className="border border-foreground text-foreground hover:bg-foreground hover:text-background hover:scale-110 px-6 py-3 rounded-lg transition-all duration-500 cursor-pointer"
+                  className="border border-foreground text-foreground hover:bg-foreground hover:text-background hover:scale-105 px-6 sm:px-8 py-3 sm:py-3.5 rounded-lg transition-all duration-300 cursor-pointer text-center"
                 >
                   Log In
                 </Link>
@@ -157,16 +157,16 @@ export default function HomePage() {
         </section>
 
         {/* CTA */}
-        <section className="flex flex-col py-16 px-4 sm:px-6 lg:px-8 justify-center items-center text-center">
-          <h2 className="text-3xl font-bold mb-4">
+        <section className="flex flex-col py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8 justify-center items-center text-center">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4">
             Ready to Get Started?
           </h2>
-          <p className="text-lg mb-8">
+          <p className="text-base sm:text-lg mb-6 sm:mb-8">
             Join thousands of users tracking locations with ease.
           </p>
           <Link
             href="/auth/signup"
-            className="bg-gray-300 hover:bg-white hover:scale-110 text-black px-8 py-2.5 rounded-lg text-lg transition-all duration-500 cursor-pointer"
+            className="bg-gray-300 hover:bg-white hover:scale-105 text-black px-6 sm:px-8 py-3 sm:py-3.5 rounded-lg text-base sm:text-lg transition-all duration-300 cursor-pointer"
           >
             Sign Up
           </Link>
