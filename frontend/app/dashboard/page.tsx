@@ -232,7 +232,9 @@ export default function Dashboard() {
                         >
                             📋 Tracking Manager
                         </Link>
-                        <button className="rounded-2xl bg-indigo-600 px-5 py-5 text-sm font-semibold text-white transition hover:bg-indigo-500 col-span-full">
+                        <button
+                            onClick={() => router.push("/settings")}
+                            className="rounded-2xl bg-indigo-600 px-5 py-5 text-sm font-semibold text-white transition hover:bg-indigo-500 col-span-full cursor-pointer">
                             ⚙️ Settings
                         </button>
                     </div>

@@ -18,11 +18,12 @@ export default function SettingsPage() {
     }, [user, isLoading, router]);
 
     useEffect(() => {
-        // Check initial theme
         const savedTheme = localStorage.getItem("theme");
-        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-        const isDark = savedTheme === "dark" || (!savedTheme && prefersDark);
+
+        // Default theme is dark
+        const isDark = savedTheme !== "light";
         setIsDarkMode(isDark);
+
         if (isDark) {
             document.documentElement.classList.add("dark");
         } else {
@@ -31,16 +32,19 @@ export default function SettingsPage() {
     }, []);
 
     const toggleTheme = () => {
-        const newIsDark = !isDarkMode;
-        setIsDarkMode(newIsDark);
-        if (newIsDark) {
-            document.documentElement.classList.add("dark");
-            localStorage.setItem("theme", "dark");
-        } else {
+        if (isDarkMode) {
+            // switch to light
             document.documentElement.classList.remove("dark");
             localStorage.setItem("theme", "light");
+            setIsDarkMode(false);
+            toast.success("Switched to light mode");
+        } else {
+            // switch to dark
+            document.documentElement.classList.add("dark");
+            localStorage.setItem("theme", "dark");
+            setIsDarkMode(true);
+            toast.success("Switched to dark mode");
         }
-        toast.success(`Switched to ${newIsDark ? "dark" : "light"} mode`);
     };
 
     if (isLoading) {

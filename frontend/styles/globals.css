@@ -13,9 +13,16 @@
 }
 
 @media (prefers-color-scheme: dark) {
+  /* Default = DARK */
   :root {
     --background: #0a0a0a;
     --foreground: #ffffff;
+  }
+
+  /* LIGHT only when dark class is NOT present */
+  html:not(.dark) {
+    --background: #ffffff;
+    --foreground: #171717;
   }
 }
 
