@@ -108,25 +108,45 @@ export default function Dashboard() {
     return (
         <div className="min-h-screen bg-background text-foreground">
             {/* Hero Section */}
-            <section className="py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
-                <div className="max-w-7xl mx-auto">
-                    <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">Welcome, {user.name}!</h1>
-                    <p className="text-base sm:text-lg opacity-75">Monitor your tracking requests and location sharing status.</p>
+            <section className="py-10 sm:py-14 px-4 sm:px-6 lg:px-8">
+                <div className="max-w-6xl mx-auto rounded-4xl border border-slate-200/70 bg-slate-50/90 p-8 shadow-xl shadow-slate-900/5 dark:border-slate-700/80 dark:bg-slate-950/70">
+                    <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+                        <div className="space-y-4">
+                            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight">Welcome back, {user.name}!</h1>
+                            <p className="max-w-3xl text-base sm:text-lg text-slate-600 dark:text-slate-300">
+                                Monitor your tracking requests and location sharing status from one central dashboard.
+                            </p>
+                        </div>
+                        <div className="flex flex-wrap gap-3">
+                            <button
+                                onClick={shareMyLocation}
+                                className="rounded-full bg-green-600 px-5 py-3 text-sm font-semibold text-white hover:bg-green-500 transition-all duration-300"
+                            >
+                                📤 Share My Location
+                            </button>
+                            <button
+                                onClick={viewTrackingHistory}
+                                className="rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-700 transition-all duration-300"
+                            >
+                                📊 View History
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </section>
 
             {/* User Info Card */}
-            <section className="mb-8 sm:mb-12 px-4 sm:px-6 lg:px-8">
-                <div className="max-w-7xl mx-auto">
-                    <div className="p-6 sm:p-8 bg-gray-800 rounded-lg shadow-md">
-                        <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Your Account</h2>
-                        <div className="space-y-3 sm:space-y-4">
-                            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center border-b border-gray-600 pb-3 sm:pb-4">
-                                <span className="opacity-75 text-sm sm:text-base mb-1 sm:mb-0">Name:</span>
+            <section className="mb-10 sm:mb-14 px-4 sm:px-6 lg:px-8">
+                <div className="max-w-6xl mx-auto">
+                    <div className="rounded-[1.75rem] border border-slate-200/70 bg-white/90 p-6 sm:p-8 shadow-lg shadow-slate-900/5 dark:border-slate-700/80 dark:bg-slate-900/95">
+                        <h2 className="text-2xl sm:text-3xl font-bold mb-5">Your Account</h2>
+                        <div className="space-y-4 sm:space-y-5">
+                            <div className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center border-b border-slate-200/70 pb-4">
+                                <span className="opacity-75 text-sm sm:text-base">Name:</span>
                                 <span className="font-semibold text-sm sm:text-base">{user.name}</span>
                             </div>
-                            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center border-b border-gray-600 pb-3 sm:pb-4">
-                                <span className="opacity-75 text-sm sm:text-base mb-1 sm:mb-0">Email:</span>
+                            <div className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center border-b border-slate-200/70 pb-4">
+                                <span className="opacity-75 text-sm sm:text-base">Email:</span>
                                 <span className="font-semibold text-sm sm:text-base break-all">{user.email}</span>
                             </div>
                         </div>
@@ -135,89 +155,89 @@ export default function Dashboard() {
             </section>
 
             {/* Stats Cards */}
-            <section className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 mb-8 sm:mb-12 px-4 sm:px-6 lg:px-8">
-                <div className="max-w-7xl mx-auto w-full">
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
+            <section className="mb-10 sm:mb-14 px-4 sm:px-6 lg:px-8">
+                <div className="max-w-6xl mx-auto">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                         <Link
                             href="/track?tab=pending"
-                            className="p-4 sm:p-6 lg:p-8 bg-yellow-900 hover:bg-yellow-800 rounded-lg shadow-md transition-colors duration-300 cursor-pointer block text-center"
+                            className="rounded-3xl bg-linear-to-br from-yellow-700 to-yellow-800 p-6 sm:p-8 text-white shadow-lg shadow-yellow-500/10 transition hover:scale-[1.01]"
                         >
-                            <h3 className="text-sm sm:text-base lg:text-xl font-bold mb-2 sm:mb-4">Pending Requests</h3>
-                            <p className="text-2xl sm:text-3xl lg:text-4xl font-bold">{trackingStats.pending}</p>
-                            <p className="text-xs sm:text-sm opacity-75 mt-1 sm:mt-2">Location requests waiting for approval</p>
+                            <h3 className="text-lg sm:text-xl font-semibold mb-3">Pending Requests</h3>
+                            <p className="text-3xl sm:text-4xl font-bold">{trackingStats.pending}</p>
+                            <p className="mt-3 text-sm opacity-80">Requests waiting for approval</p>
                         </Link>
 
                         <Link
                             href="/track?tab=active"
-                            className="p-4 sm:p-6 lg:p-8 bg-green-900 hover:bg-green-800 rounded-lg shadow-md transition-colors duration-300 cursor-pointer block text-center"
+                            className="rounded-3xl bg-linear-to-br from-emerald-700 to-emerald-800 p-6 sm:p-8 text-white shadow-lg shadow-emerald-500/10 transition hover:scale-[1.01]"
                         >
-                            <h3 className="text-sm sm:text-base lg:text-xl font-bold mb-2 sm:mb-4">Active Tracking</h3>
-                            <p className="text-2xl sm:text-3xl lg:text-4xl font-bold">{trackingStats.active}</p>
-                            <p className="text-xs sm:text-sm opacity-75 mt-1 sm:mt-2">Active location share sessions</p>
+                            <h3 className="text-lg sm:text-xl font-semibold mb-3">Active Tracking</h3>
+                            <p className="text-3xl sm:text-4xl font-bold">{trackingStats.active}</p>
+                            <p className="mt-3 text-sm opacity-80">Active location share sessions</p>
                         </Link>
 
                         <Link
                             href="/track?tab=denied"
-                            className="p-4 sm:p-6 lg:p-8 bg-red-900 hover:bg-red-800 rounded-lg shadow-md transition-colors duration-300 cursor-pointer block text-center"
+                            className="rounded-3xl bg-linear-to-br from-red-700 to-red-800 p-6 sm:p-8 text-white shadow-lg shadow-red-500/10 transition hover:scale-[1.01]"
                         >
-                            <h3 className="text-sm sm:text-base lg:text-xl font-bold mb-2 sm:mb-4">Denied Requests</h3>
-                            <p className="text-2xl sm:text-3xl lg:text-4xl font-bold">{trackingStats.denied}</p>
-                            <p className="text-xs sm:text-sm opacity-75 mt-1 sm:mt-2">Rejected location requests</p>
+                            <h3 className="text-lg sm:text-xl font-semibold mb-3">Denied Requests</h3>
+                            <p className="text-3xl sm:text-4xl font-bold">{trackingStats.denied}</p>
+                            <p className="mt-3 text-sm opacity-80">Rejected location requests</p>
                         </Link>
 
                         <Link
                             href="/track?tab=all"
-                            className="p-4 sm:p-6 lg:p-8 bg-blue-900 hover:bg-blue-800 rounded-lg shadow-md transition-colors duration-300 cursor-pointer block text-center col-span-2 lg:col-span-1"
+                            className="rounded-3xl bg-linear-to-br from-sky-700 to-sky-800 p-6 sm:p-8 text-white shadow-lg shadow-sky-500/10 transition hover:scale-[1.01]"
                         >
-                            <h3 className="text-sm sm:text-base lg:text-xl font-bold mb-2 sm:mb-4">Total Requests</h3>
-                            <p className="text-2xl sm:text-3xl lg:text-4xl font-bold">{trackingStats.total}</p>
-                            <p className="text-xs sm:text-sm opacity-75 mt-1 sm:mt-2">All tracking requests</p>
+                            <h3 className="text-lg sm:text-xl font-semibold mb-3">Total Requests</h3>
+                            <p className="text-3xl sm:text-4xl font-bold">{trackingStats.total}</p>
+                            <p className="mt-3 text-sm opacity-80">All tracking requests</p>
                         </Link>
                     </div>
                 </div>
             </section>
 
             {/* Quick Actions */}
-            <section className="mb-8 sm:mb-12 px-4 sm:px-6 lg:px-8">
-                <div className="max-w-7xl mx-auto">
-                    <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Quick Actions</h2>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 sm:gap-4">
+            <section className="mb-10 sm:mb-14 px-4 sm:px-6 lg:px-8">
+                <div className="max-w-6xl mx-auto">
+                    <h2 className="text-2xl sm:text-3xl font-bold mb-5">Quick Actions</h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                         <Link
                             href="/track"
-                            className="p-3 sm:p-4 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors duration-300 text-center block text-sm sm:text-base"
+                            className="rounded-2xl bg-blue-600 px-5 py-5 text-center text-sm font-semibold text-white transition hover:bg-blue-500"
                         >
                             📍 Start Tracking
                         </Link>
                         <button
                             onClick={shareMyLocation}
-                            className="p-3 sm:p-4 bg-green-600 hover:bg-green-700 rounded-lg transition-colors duration-300 cursor-pointer text-sm sm:text-base"
+                            className="rounded-2xl bg-green-600 px-5 py-5 text-sm font-semibold text-white transition hover:bg-green-500"
                         >
                             📤 Share My Location
                         </button>
                         <button
                             onClick={viewTrackingHistory}
-                            className="p-3 sm:p-4 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors duration-300 cursor-pointer text-sm sm:text-base"
+                            className="rounded-2xl bg-purple-600 px-5 py-5 text-sm font-semibold text-white transition hover:bg-purple-500"
                         >
                             📊 View Tracking History
                         </button>
                         <Link
                             href="/track?tab=realtime"
-                            className="p-3 sm:p-4 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors duration-300 text-center block text-sm sm:text-base"
+                            className="rounded-2xl bg-violet-600 px-5 py-5 text-center text-sm font-semibold text-white transition hover:bg-violet-500"
                         >
                             ⚡ Real-Time Tracking
                         </Link>
                         <Link
                             href="/track?tab=active"
-                            className="p-3 sm:p-4 bg-gray-600 hover:bg-gray-700 rounded-lg transition-colors duration-300 text-center block text-sm sm:text-base"
+                            className="rounded-2xl bg-slate-600 px-5 py-5 text-center text-sm font-semibold text-white transition hover:bg-slate-500"
                         >
                             📋 Tracking Manager
                         </Link>
-                        <button className="p-3 sm:p-4 bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors duration-300 cursor-pointer text-sm sm:text-base col-span-2 sm:col-span-3 lg:col-span-4 xl:col-span-6">
+                        <button className="rounded-2xl bg-indigo-600 px-5 py-5 text-sm font-semibold text-white transition hover:bg-indigo-500 col-span-full">
                             ⚙️ Settings
                         </button>
                     </div>
                 </div>
             </section>
-        </div >
+        </div>
     );
 }

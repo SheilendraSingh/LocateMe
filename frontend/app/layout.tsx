@@ -4,6 +4,7 @@ import "../styles/globals.css";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
 import { AuthProvider } from "@/context/AuthContext";
+import ThemeInitializer from "@/components/ThemeInitializer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,6 +38,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
       >
         <AuthProvider>
+          <ThemeInitializer />
           <Header />
           <main className="pt-16 flex-1">
             <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">

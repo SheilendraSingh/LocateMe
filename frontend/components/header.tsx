@@ -34,7 +34,7 @@ export default function Header() {
     };
 
     return (
-        <header className="fixed top-0 w-full bg-background shadow-md border-b border-gray-200 dark:border-gray-700 z-50">
+        <header className="fixed top-0 w-full bg-background/95 backdrop-blur-md shadow-md border-b border-gray-200/70 dark:border-gray-700/70 z-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16">
                     {/* Logo Section */}
@@ -50,6 +50,9 @@ export default function Header() {
                         </Link>
                         <Link href="/track" className="text-foreground opacity-50 hover:opacity-100 hover:scale-105 transition-all duration-500 text-sm lg:text-base">
                             Track
+                        </Link>
+                        <Link href="/settings" className="text-foreground opacity-50 hover:opacity-100 hover:scale-105 transition-all duration-500 text-sm lg:text-base">
+                            Settings
                         </Link>
 
                         {isLoading ? (
@@ -112,6 +115,13 @@ export default function Header() {
                                 onClick={() => setIsMenuOpen(false)}
                             >
                                 📍 Track
+                            </Link>
+                            <Link
+                                href="/settings"
+                                className="text-foreground opacity-50 hover:opacity-100 hover:scale-105 transition-all duration-500 cursor-pointer py-2 px-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+                                onClick={() => setIsMenuOpen(false)}
+                            >
+                                ⚙️ Settings
                             </Link>
 
                             {isLoading ? (
