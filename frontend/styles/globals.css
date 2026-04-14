@@ -1,6 +1,14 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
+/* Default = dark */
 :root {
+  --background: #0a0a0a;
+  --foreground: #ffffff;
+}
+
+/* Light mode only when .dark is NOT present */
+html:not(.dark) {
   --background: #ffffff;
   --foreground: #171717;
 }
@@ -13,16 +21,9 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  /* Default = DARK */
   :root {
     --background: #0a0a0a;
     --foreground: #ffffff;
-  }
-
-  /* LIGHT only when dark class is NOT present */
-  html:not(.dark) {
-    --background: #ffffff;
-    --foreground: #171717;
   }
 }
 

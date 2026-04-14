@@ -22,7 +22,7 @@ export default function SettingsPage() {
 
         // Default theme is dark
         const isDark = savedTheme !== "light";
-        setIsDarkMode(isDark);
+
 
         if (isDark) {
             document.documentElement.classList.add("dark");
