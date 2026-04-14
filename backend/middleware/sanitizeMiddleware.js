@@ -41,8 +41,8 @@ const sanitizeObject = (obj) => {
   const sanitized = {};
   for (const key in obj) {
     if (obj.hasOwnProperty(key)) {
-      // Allow dots in email fields
-      const allowDots = key.toLowerCase() === "email";
+      // Allow dots in any email-like field: email, targetEmail, requesterEmail, etc.
+      const allowDots = key.toLowerCase().endsWith("email");
       if (typeof obj[key] === "string") {
         sanitized[key] = sanitizeString(obj[key], allowDots);
       } else {

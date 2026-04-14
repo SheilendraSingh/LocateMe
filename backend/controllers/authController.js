@@ -50,6 +50,12 @@ const validateEmail = (email) => {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 };
 
+const normalizeEmail = (email) => {
+  return String(email || "")
+    .trim()
+    .toLowerCase();
+};
+
 // Password must be at least 6 characters long - can be enhanced with more complex rules if needed for better security and user experience
 // Helper: Format user response to exclude sensitive info and include token for consistent API responses and better security
 const formatUser = (user) => {
@@ -260,25 +266,26 @@ export const sendTrackingOTP = async (req, res) => {
   try {
     const { targetEmail } = req.body;
     const user = req.user;
+    const normalizedTargetEmail = normalizeEmail(targetEmail);
 
-    if (!targetEmail) {
+    if (!normalizedTargetEmail) {
       return res.status(400).json({
         success: false,
         message: "Please provide target email address",
       });
     }
 
-    if (!validateEmail(targetEmail)) {
+    if (!validateEmail(normalizedTargetEmail)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid target email format",
+        message: "Please provide a valid target email address",
       });
     }
 
     // Check if tracking request already exists (pending or active)
     const existingRequest = user.trackingRequests.find(
       (req) =>
-        req.targetEmail === targetEmail.toLowerCase() &&
+        req.targetEmail === normalizedTargetEmail &&
         (req.status === "pending" || req.status === "active"),
     );
 
@@ -294,14 +301,14 @@ export const sendTrackingOTP = async (req, res) => {
 
     // Create deny token
     const denyToken = jwt.sign(
-      { requesterId: user._id, targetEmail: targetEmail.toLowerCase() },
+      { requesterId: user._id, targetEmail: normalizedTargetEmail },
       process.env.JWT_SECRET,
       { expiresIn: "10m" },
     );
 
     // Create tracking request
     const trackingRequest = {
-      targetEmail: targetEmail.toLowerCase(),
+      targetEmail: normalizedTargetEmail,
       status: "pending",
       requestedAt: new Date(),
     };
@@ -317,8 +324,8 @@ export const sendTrackingOTP = async (req, res) => {
     }/api/auth/deny-tracking-link/${denyToken}`;
 
     try {
-      await sendEmailOTP(targetEmail, otp, denyLink);
-      console.log(`✅ Tracking OTP sent to: ${targetEmail}`);
+      await sendEmailOTP(normalizedTargetEmail, otp, denyLink);
+      console.log(`✅ Tracking OTP sent to: ${normalizedTargetEmail}`);
       res.status(200).json({
         success: true,
         message: "OTP sent successfully. User has 10 minutes to respond.",
@@ -328,7 +335,7 @@ export const sendTrackingOTP = async (req, res) => {
 
       // Clean up failed request
       user.trackingRequests = user.trackingRequests.filter(
-        (r) => r.targetEmail !== targetEmail.toLowerCase(),
+        (r) => r.targetEmail !== normalizedTargetEmail,
       );
       user.tempOtp = undefined;
       user.tempOtpExpiry = undefined;
@@ -359,6 +366,9 @@ export const verifyOTP = async (req, res) => {
   try {
     const { otp, targetEmail } = req.body;
     const user = req.user;
+    const normalizedTargetEmail = targetEmail
+      ? normalizeEmail(targetEmail)
+      : undefined;
 
     if (!otp) {
       return res.status(400).json({
@@ -385,7 +395,7 @@ export const verifyOTP = async (req, res) => {
     const pendingRequest = user.trackingRequests.find(
       (req) =>
         req.status === "pending" &&
-        (!targetEmail || req.targetEmail === targetEmail.toLowerCase()),
+        (!normalizedTargetEmail || req.targetEmail === normalizedTargetEmail),
     );
 
     if (!pendingRequest) {
@@ -451,11 +461,19 @@ export const updateLocation = async (req, res) => {
   try {
     const { targetEmail, latitude, longitude, address, method } = req.body;
     const user = req.user;
+    const normalizedTargetEmail = normalizeEmail(targetEmail);
 
-    if (!targetEmail) {
+    if (!normalizedTargetEmail) {
       return res.status(400).json({
         success: false,
         message: "Please provide target email",
+      });
+    }
+
+    if (!validateEmail(normalizedTargetEmail)) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a valid target email address",
       });
     }
 
@@ -482,7 +500,7 @@ export const updateLocation = async (req, res) => {
 
     const trackingRequest = user.trackingRequests.find(
       (req) =>
-        req.targetEmail === targetEmail.toLowerCase() &&
+        req.targetEmail === normalizedTargetEmail &&
         req.status === "active",
     );
 
@@ -513,7 +531,7 @@ export const updateLocation = async (req, res) => {
     await user.save();
 
     console.log(
-      `✅ Location updated for: ${targetEmail} at ${latitude}, ${longitude}`,
+      `✅ Location updated for: ${normalizedTargetEmail} at ${latitude}, ${longitude}`,
     );
     res.status(200).json({
       success: true,
@@ -585,10 +603,18 @@ export const closeTracking = async (req, res) => {
   try {
     const { targetEmail } = req.body;
     const user = req.user;
+    const normalizedTargetEmail = normalizeEmail(targetEmail);
+    const legacyTargetEmail = normalizedTargetEmail.replace(/\./g, "");
+    const matchesTargetEmail = (email) =>
+      email === normalizedTargetEmail || email === legacyTargetEmail;
+
+    if (!normalizedTargetEmail) {
+      return res.status(400).json({ message: "Target email is required" });
+    }
 
     const trackingRequest = (user.trackingRequests || []).find(
       (req) =>
-        req.targetEmail === targetEmail &&
+        matchesTargetEmail(req.targetEmail) &&
         (req.status === "active" || req.status === "pending"),
     );
 
@@ -600,7 +626,7 @@ export const closeTracking = async (req, res) => {
     user.trackingRequests = (user.trackingRequests || []).filter(
       (req) =>
         !(
-          req.targetEmail === targetEmail &&
+          matchesTargetEmail(req.targetEmail) &&
           (req.status === "active" || req.status === "pending")
         ),
     );

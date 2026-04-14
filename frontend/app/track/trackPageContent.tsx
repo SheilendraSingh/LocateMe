@@ -2,7 +2,7 @@
 
 import { useAuth } from "@/context/AuthContext";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import Map from "@/components/Map";
 import RealTimeTracking from "@/app/components/RealTimeTracking";
@@ -53,6 +53,35 @@ export default function TrackPageContent() {
         denied: TrackingRequest[];
     }>({ pending: [], active: [], denied: [] });
 
+    const isValidEmail = (email: string) => {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    };
+
+    const loadTrackingStatus = useCallback(async () => {
+        if (!token) return;
+
+        try {
+            const res = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/auth/tracking-status`,
+                {
+                    method: "GET",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                    cache: "no-store",
+                }
+            );
+
+            if (res.ok) {
+                const data = await res.json();
+                setTrackingStats(data.stats);
+                setTrackingDetails(data.details);
+            }
+        } catch (error) {
+            console.error("Failed to fetch tracking status:", error);
+        }
+    }, [token]);
+
 
 
 
@@ -94,31 +123,8 @@ export default function TrackPageContent() {
 
     useEffect(() => {
         if (activeTab === "main" || !token) return;
-
-        const loadTrackingStatus = async () => {
-            try {
-                const res = await fetch(
-                    `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/auth/tracking-status`,
-                    {
-                        method: "GET",
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    }
-                );
-
-                if (res.ok) {
-                    const data = await res.json();
-                    setTrackingStats(data.stats);
-                    setTrackingDetails(data.details);
-                }
-            } catch (error) {
-                console.error("Failed to fetch tracking status:", error);
-            }
-        };
-
         loadTrackingStatus();
-    }, [activeTab, token]);
+    }, [activeTab, token, loadTrackingStatus]);
 
     useEffect(() => {
         if (!isLoading && !user) {
@@ -145,10 +151,22 @@ export default function TrackPageContent() {
     }
 
     const sendOTP = async () => {
-        if (!targetEmail) {
+        const normalizedTargetEmail = targetEmail.trim().toLowerCase();
+
+        if (!normalizedTargetEmail) {
             toast.error("Please enter the person's email address");
             return;
         }
+
+        if (!isValidEmail(normalizedTargetEmail)) {
+            toast.error("Please enter a valid target email address");
+            return;
+        }
+
+        if (normalizedTargetEmail !== targetEmail) {
+            setTargetEmail(normalizedTargetEmail);
+        }
+
         try {
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/auth/send-tracking-otp`, {
                 method: "POST",
@@ -156,7 +174,7 @@ export default function TrackPageContent() {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({ targetEmail }),
+                body: JSON.stringify({ targetEmail: normalizedTargetEmail }),
             });
             if (res.ok) {
                 setIsOtpSent(true);
@@ -246,7 +264,7 @@ export default function TrackPageContent() {
 
                     // Update location in backend if we have a target email
                     if (targetEmail) {
-                        updateLocationData(targetEmail, newLocation);
+                        updateLocationData(targetEmail.trim().toLowerCase(), newLocation);
                     }
                 },
                 (error) => {
@@ -319,6 +337,8 @@ export default function TrackPageContent() {
     };
 
     const closeTracking = async (targetEmail: string) => {
+        const normalizedTargetEmail = targetEmail.trim().toLowerCase();
+
         try {
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/auth/close-tracking`, {
                 method: "POST",
@@ -326,10 +346,11 @@ export default function TrackPageContent() {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({ targetEmail }),
+                body: JSON.stringify({ targetEmail: normalizedTargetEmail }),
             });
             if (res.ok) {
                 toast.success("Tracking closed successfully");
+                await loadTrackingStatus();
 
             } else {
                 const error = await res.json();
@@ -341,6 +362,8 @@ export default function TrackPageContent() {
     };
 
     const updateLocationData = async (targetEmail: string, locationData: Location) => {
+        const normalizedTargetEmail = targetEmail.trim().toLowerCase();
+
         try {
             await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/auth/update-location`, {
                 method: "POST",
@@ -349,7 +372,7 @@ export default function TrackPageContent() {
                     Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify({
-                    targetEmail,
+                    targetEmail: normalizedTargetEmail,
                     latitude: locationData.latitude,
                     longitude: locationData.longitude,
                     address: locationData.address,

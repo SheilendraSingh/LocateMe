@@ -25,11 +25,27 @@ describe("Sanitization Middleware", () => {
     expect(next).toHaveBeenCalled();
   });
 
-  it("should remove dots from object values", () => {
+  it("should remove dots from non-email fields", () => {
+    req.body = { username: "test.example.com" };
+    sanitizeInput(req, res, next);
+
+    expect(req.body.username).toBe("testexamplecom");
+    expect(next).toHaveBeenCalled();
+  });
+
+  it("should preserve dots in email fields", () => {
     req.body = { email: "test.example.com" };
     sanitizeInput(req, res, next);
 
-    expect(req.body.email).toBe("testexamplecom");
+    expect(req.body.email).toBe("test.example.com");
+    expect(next).toHaveBeenCalled();
+  });
+
+  it("should preserve dots in targetEmail field", () => {
+    req.body = { targetEmail: "john.doe@example.com" };
+    sanitizeInput(req, res, next);
+
+    expect(req.body.targetEmail).toBe("john.doe@example.com");
     expect(next).toHaveBeenCalled();
   });
 
@@ -51,7 +67,7 @@ describe("Sanitization Middleware", () => {
     sanitizeInput(req, res, next);
 
     expect(req.body.user.name).toBe("JohnDoe");
-    expect(req.body.user.details.email).toBe("testexamplecom");
+    expect(req.body.user.details.email).toBe("test.example.com");
     expect(next).toHaveBeenCalled();
   });
 
